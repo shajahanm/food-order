@@ -1,9 +1,9 @@
-import React, { createContext, useReducer } from "react";
+import React, { createContext, useReducer, useCallback } from "react";
 
 export const CartContext = createContext({
   items: [],
-  addItem: (item) => {},
-  removeItem: (id) => {},
+  addItem: () => {},
+  removeItem: () => {},
 });
 
 const cartReducer = (state, action) => {
@@ -30,6 +30,10 @@ const cartReducer = (state, action) => {
       (item) => item.id === action.id
     );
 
+    if (existingCartItemIndex === -1) {
+      return state; // Item not found, no change in state
+    }
+
     const existingCartItem = state.items[existingCartItemIndex];
     const updatedItems = [...state.items];
     if (existingCartItem.quantity === 1) {
@@ -44,19 +48,19 @@ const cartReducer = (state, action) => {
     return { ...state, items: updatedItems };
   }
 
-  return state;
+  return state; // Default case
 };
 
 export function CartContextProvider({ children }) {
   const [cart, dispatchAction] = useReducer(cartReducer, { items: [] });
 
-  function addItem(item) {
+  const addItem = useCallback((item) => {
     dispatchAction({ type: "ADD_ITEM", item });
-  }
+  }, []);
 
-  function removeItem(id) {
+  const removeItem = useCallback((id) => {
     dispatchAction({ type: "REMOVE_ITEM", id });
-  }
+  }, []);
 
   const cartContext = {
     items: cart.items,
